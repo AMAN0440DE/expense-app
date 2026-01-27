@@ -22,11 +22,15 @@ require('dotenv').config();
 
 const express = require('express');
 
+const cookieParser = require('cookie-parser');
+
 const mongoose = require('mongoose');
 
 // connect to mongodb database
 
 const authRoutes = require('./src/routes/authRoutes');  // refracted
+const groupRoutes = require('./src/routes/groupRoutes');  // new for Splitt App
+
 
 // mongoose.connect("mongodb://localhost:27017/expense-app")            // its sensitive and must not put on github untill privete so later use env variable
 // // store in .env and .env must be added in .gitignore file
@@ -43,7 +47,10 @@ const app = express();   // object of express
 app.use(express.json());    // middleware to parse json data in request body// middleware function
 // the request coming to server via client is in json format and this middleware will parse that json data to js object automatically
 
+app.use(cookieParser());    // middleware to parse cookies from request
 app.use('/auth', authRoutes);  // refracted
+app.use('/groups', groupRoutes);  // new for Splitt App
+
 
 //let users = [];  // to store user data
 
@@ -127,3 +134,50 @@ app.listen(5001, () => {
 
 
 // will check with postman via http://localhost:5001/auth/register and not http://localhost:5001/register beacuse we added /auth in app.use('/auth', authRoutes);
+
+
+// ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// back in days when one needs to check if user is admin or not
+// we used session managed (key - value pair)before microservises
+// these were kown as stateful session management beacuse it used to store session data on server side and somehow when changed then it looses track of user's credentials
+// but now we use JWT (json web token) -> stateless authentication
+// JWT is a library provides a way to generate the token by taking three things (Random String), Data to be encrypted(user-> email, name), expiry time(1 hour)<if money transaction then as low as 5 min>
+// whever have this secret and token can acheve data - so never push token and secret to github/ .env to gpts/github
+// if want to share API key then share the secret key and token will be generated on fly, this way if one gets the secret key he can get the data
+
+// install jsonwebtoken package -> npm i jsonwebtoken in expense-server folder
+
+// first it validate that whether the user passed the credentials are valid or not from database
+// 
+
+
+/**
+ * Client(Postman)                            Server (Express)                      Database (MongoDB)         JWT
+ * |                                            |                                     |
+ * --1. Register / Login Request -------------> |-----email(Dao) -------------------->|                                         
+ *                                              |--2. User Object --------------------|
+ *                                              |----------------- 3. Sign secret data ------------------------->|          
+ *                                              |<------------------Token-------------|--------------------------|
+ * <-------- 5. Send Token 1(cookie)----------- |
+ * -----------Middleware----------------------->|
+ *                                              |-----------------------Token + Secret-------------------------->|
+ *                                              |<-----------------------User Data-------------------------------|
+ *                                              |
+ *                                              | loop group controller
+ 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ */
+
+/**
+ * OAuth 2.0 (Autorization AuthZ)
+ *    +
+ * OIDC (Open ID Connect)(Authentication AuthN)
+ * 
+ * 
+ * SSO
+ */

@@ -1,7 +1,8 @@
 // const users = require('../dao/userDb');    // called refractoring for maintainig code time to time for better structuring // delete related files like: userDb.js under dao folder
 const userDao = require('../dao/userDao');
 
-const bcrypt = require('bcrypt');  // for hashing password before storing in db for security 
+const bcrypt = require('bcryptjs');  // for hashing password before storing in db for security 
+const jwt = require('jsonwebtoken'); // for generating token after login for authentication purpose
 // it takes password and adds random string to it and then hashes it so even if 2 users have same password then also hashed value will be different because of random string
 // salt rounds - how many times we want to apply hashing algorithm
 // more the salt rounds more secure but takes more time to hash
@@ -24,7 +25,21 @@ const authController = {
         const isPasswordMatched = await bcrypt.compare(password, user.password); // comparing plain text password with hashed password stored in db
 
         // if(user && user.password == password){
-        if(user && isPasswordMatched){             // changed after adding bcrypt for hashing password
+        if (user && isPasswordMatched) {             // changed after adding bcrypt for hashing password
+            const token = jwt.sign({
+                email: user.email,
+                name: user.name,
+                id: user._id
+            }, process.env.JWT_SECRET,
+                { expiresIn: '1h' }              // token will expire in 1 hour
+            );
+
+            response.cookie('jwtToken', token, {
+                httpOnly: true,
+                secure: true,
+                domain: 'localhost',
+                path: '/',
+            });
             return response.status(200).json({
                 message: 'User Authenticated',
                 // user: {id: user.id, name: user.name, email: user.email}

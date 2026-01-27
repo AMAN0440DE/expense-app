@@ -14,3 +14,5 @@ const groupSchema = new mongoose.Schema({             // creates schema from .Sc
         isPaid: Boolean,
     }
 });
+
+module.exports = mongoose.model('Group', groupSchema);
