@@ -14,3 +14,116 @@ will giuve the same output
 as we added the start command (custom command) in package.json file
 either we can run npm run start or node server.js to run the server
  */
+
+// now import express
+
+// configure environment variables from .env file
+require('dotenv').config();
+
+const express = require('express');
+
+const mongoose = require('mongoose');
+
+// connect to mongodb database
+
+const authRoutes = require('./src/routes/authRoutes');  // refracted
+
+// mongoose.connect("mongodb://localhost:27017/expense-app")            // its sensitive and must not put on github untill privete so later use env variable
+// // store in .env and .env must be added in .gitignore file
+
+// we cant use above credentials directly so we use process.env to access environment variables stored the same in .env file and .env is gitignored
+    mongoose.connect(process.env.MONGO_DB_CONNECTION_URL)
+
+    .then(() => console.log("Connected to MongoDB"))
+    .catch((error) => console.error("Error connecting to MongoDB:", error));
+
+
+const app = express();   // object of express
+
+app.use(express.json());    // middleware to parse json data in request body// middleware function
+// the request coming to server via client is in json format and this middleware will parse that json data to js object automatically
+
+app.use('/auth', authRoutes);  // refracted
+
+//let users = [];  // to store user data
+
+// app.post('/register', (request, response) => {       // whenever request comes to /register then run this callback function
+//     const {name, email, password} = request.body;  // everything that will be sent to client will be a part of request body
+    
+//     if(!name || !email || !password){
+//         return response.status(400).json({
+//             message: 'Name, Email, Password are required'
+//         });
+//     }
+
+//     // Implement logic to check existing user
+
+//     const user = users.find(user => user.email === email);
+//     if(user){
+//         return response.status(400).json({
+//             message: 'User already exists with email: $email'
+//         });
+//     }
+ 
+
+//     const newUser = {
+//         id: users.length + 1,
+//         name: name,
+//         email: email,
+//         password: password
+//     };
+
+//     users.push(newUser);
+
+//     return response.status(200).json({
+//         message: 'User Registered',
+//         user: {id: newUser.id}
+//     });
+// });
+
+
+// /**
+//  * create a POST API with path /login which takes email and password from request body and
+//  * checks if user with same email exists and password exist in the users array
+//  * if yes return 200 response, otherwise return 400 response with appropriate message 
+//  */
+
+// app.post('/login', (request, response) => {
+//     const {email, password} = request.body;
+//     if(!email || !password){
+//         return response.status(400).json({
+//             message: 'Email and Password are required'
+//         });
+//     }
+//     const user = users.find(user => user.email === email && user.password === password);
+//     if(user){
+//         return response.status(200).json({
+//             message: 'Login Successful',
+//             user: {id: $users.id, name: $users.name, email: $users.email}
+//         });
+//     } else {
+//         return response.status(400).json({
+//             message: 'Invalid Email or Password'
+//         });
+//     }
+// })
+
+// cleaned up server.js by moving register and login api code to controller and route files
+// also move let users = []; to dao folder to userDb.js file
+
+app.listen(5001, () => {
+    console.log('Server is running on port 5001');    // whenever request is sent http://ip-address: port
+    // theres lots of port and generally express server run on port 5000 or 5001
+})
+
+// any project beyond 200 lines is not good practice to keep in single file lots of scrolling and diificult to edit the file
+// so way to code structuring -  MVC (very old) 
+// 1. single responsibility principle - every file should have single responsibility
+// create src folder -> keeps parent directory clean, any source code there should go in src folder
+// create controller folder under src-> to be the entry point in the business logic , responsible for data validation before going further, and calls different layers
+// create route folder under src
+// create dao folder under src -> data access object -> responsible to interact with database
+
+
+
+// will check with postman via http://localhost:5001/auth/register and not http://localhost:5001/register beacuse we added /auth in app.use('/auth', authRoutes);
