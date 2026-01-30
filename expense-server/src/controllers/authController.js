@@ -21,6 +21,11 @@ const authController = {
         }
         // const user = users.find(user => user.email === email && user.password === password);
         const user = await userDao.findByEmail(email);
+        if (!user) {
+            return response.status(400).json({
+                message: 'Invalid Email or Password'
+            });
+        }
 
         const isPasswordMatched = await bcrypt.compare(password, user.password); // comparing plain text password with hashed password stored in db
 
@@ -87,8 +92,9 @@ const authController = {
         const user = await userDao.create({
             name: name,
             email: email,
-            password: password
+            password: hashedPassword
         })
+        
             .then(u => { return u;})
             .catch(error => {
                 if (error.code === 'USER_EXISTS'){
@@ -98,10 +104,34 @@ const authController = {
                 }
             });
 
-        return response.status(200).json({
-            message: 'User registered',
-            user: {id: user._id}
-        });                                         // refracted
+            //  Generate JWT token
+        const token = jwt.sign(
+            {
+                email: user.email,
+                name: user.name,
+                id: user._id
+            },
+            process.env.JWT_SECRET,
+            { expiresIn: '1h' }
+        );
+
+        // 🍪 Set JWT as cookie
+        response.cookie('jwtToken', token, {
+            httpOnly: true,
+            secure: false,   // localhost
+            sameSite: 'lax'
+        });
+
+
+        // return response.status(200).json({
+        //     message: 'User registered',
+        //     user: {id: user._id}
+        // });                                         // refracted
+        return response.status(201).json({
+            message: 'User registered successfully',
+            user: user
+        });
+
     
 
         // const newUser = {
@@ -120,7 +150,44 @@ const authController = {
 
         // remaining
         console.log("Registering user")
-    }
+    },
+    isUserLoggedIn: async (request, response) => {
+        try {
+            const token = request.cookies?.jwtToken;
+            if(!token){
+                return response.status(401).json({
+                    message: 'Unauthorized access'
+                });
+            }
+            jwt.verify(token, process.env.JWT_SECRET, (error, user) => {
+                if(error){
+                    return response.status(401).json({
+                        message: 'Invalid Token'
+                    });
+                }else {
+                    response.json({
+                        user: user
+                    });
+                }
+            });
+        }catch (error){
+            console.log(error);
+            return response.status(500).json({
+                message: 'Internal server error'
+            });
+        }
+    },
+    logout: async(request, response) => {
+        try {
+            response.clearCookie('jwtToken');
+            response.json({ message: 'Logout successful'});
+        }catch (error) {
+            console.log(error);
+            return response.status(500).json({
+                message: 'Internal server error'
+            });
+        }
+    },
 };
 // create top level object and export so others can import because its privet so export is done, importing via require keyword
 module.exports = authController;
