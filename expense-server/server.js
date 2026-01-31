@@ -24,6 +24,8 @@ const express = require('express');
 
 const cookieParser = require('cookie-parser');
 
+const cors = require('cors');
+
 const mongoose = require('mongoose');
 
 // connect to mongodb database
@@ -41,8 +43,14 @@ const groupRoutes = require('./src/routes/groupRoutes');  // new for Splitt App
     .then(() => console.log("Connected to MongoDB"))
     .catch((error) => console.error("Error connecting to MongoDB:", error));
 
+const corsOption = {
+    origin: process.env.CLIENT_URL,
+    credentials: true
+};
 
 const app = express();   // object of express
+
+app.use(cors(corsOption));
 
 app.use(express.json());    // middleware to parse json data in request body// middleware function
 // the request coming to server via client is in json format and this middleware will parse that json data to js object automatically
@@ -180,4 +188,21 @@ app.listen(5001, () => {
  * 
  * 
  * SSO
+ */
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Browser/User                            Client                               Google Auth Server                          Our Server
+ *     |                                      |                                          |                                       |
+ *     |--------Continue with google--------->|                                          |                                       |
+ *     |                                      |--------------Client ID------------------>|                                       |
+ *     |<-----------------------------------Login Page-----------------------------------|                                       |
+ *     |-------------------------------------Login-------------------------------------->|                                       |
+ *     |<------------------------------Consent Page--------------------------------------|                                       |
+ *     |-------------------------------Consent Success---------------------------------->|                                       |
+ *     |                                      |<----------------Token--------------------|                                       |
+ *     |                                      |-------------------------------------Token--------------------------------------->|
+ *                                                                                       |<-------------Verify token-------------|
+ *                                                                                       |--------------Identify Data----------->|
+ * 
  */
