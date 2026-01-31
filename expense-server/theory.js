@@ -142,4 +142,59 @@
  * projects for WinterPEP
  * 
  * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * //
+ * //////////////////////////////////////////////////////////////////////////////////////////////////////////FRONTEND
+ * 
+ * 
+ * <head>
+ * responsible for SEO
+ * 
+ * header ()
+ * --------
+ * secondary header(hero) / crouser section which you want users to see featured products
+ * -------------------------------
+ * 
+ * 
+ * 
+ * 
+ * 
+ * cookies takes  ram and stores and prevent users from frequent login headache 
+ * ------------------------------------------]
+ * 
+ * 
+ * 
+ * 
+ * earlier it take much loading time to load a page on browse from server
+ * now React injects itself in the DOM and creates its own DOM from second time and compares from the actual dom whatever changed will be replaced saving tons of time and no loading symbols
+ *   
+ * REACT
+ * - single page JS framework
+ * - Reusable components(combination of different html tags)
+ * - output is also a JS
+ * - offers adevelopment server(whenever changes made it compares and swaps the changes)
+ * 
+ * 
+ * 
+ * OAUth 2.0 protocol
+ * first Authorization is done then aur=thentication, google needs to make sure that your data being passed to third party app is a reliable party 
+ * 
+ * Browser                    expense-react-client                           google OAuth                   expense-server                    MongoDB
+ * ----continue with google--------->|--------Redirect with client ID------------>|
+ *    |<------------------Login to google-----------------------------------------|
+ *    |-------------------Login to google account-------------------------------->|
+ *    |<--------------------Consent screen(authorization)-------------------------|
+ *    |----------------------Conscent given-------------------------------------->|
+ *                                   |<---------Token-----------------------------|
+ *                                   |------------------------------/auth/google-sso----------------------------->|
+ *                                                                                |<---------verify token---------|
+ *                                                                                |---------user info ----------->|----------put operation------>|
+ *                                                                                                                |<-----------------------------|
+ *  
+ * 
  */
