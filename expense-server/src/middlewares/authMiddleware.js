@@ -12,6 +12,7 @@ const authMiddleware = {
             try {
                 const user = jwt.verify(token, process.env.JWT_SECRET);
                 request.user = user;
+                next();
             }catch (error){
                 return response.status(401).json({
                     error: 'Invalid or expired token'
@@ -25,6 +26,7 @@ const authMiddleware = {
         }
     },
 }
+module.exports = authMiddleware;
 
 // since cookie will be plain text so need to be converted to js object using cookie-parser package
 // install cookie-parser package -> npm i cookie-parser in expense-server folder
