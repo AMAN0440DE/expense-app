@@ -9,6 +9,7 @@ const jwt = require('jsonwebtoken'); // for generating token after login for aut
 // usually 10-12 salt rounds are used
 // installed via npm install bcrypt command in expense-server folder
 // compare user provided password with hashed password stored in db via bcrypt.compare method
+const {OAuth2Client} = require ('google-auth-library');
 
 const authController = {
     login: async (request, response) => {             // async keyword lets know that this will take time, and await tell at which line it will take time(line 14)
@@ -182,6 +183,58 @@ const authController = {
             response.clearCookie('jwtToken');
             response.json({ message: 'Logout successful'});
         }catch (error) {
+            console.log(error);
+            return response.status(500).json({
+                message: 'Internal server error'
+            });
+        }
+    },
+    googleSso: async (request, response) => {
+        try {
+            const { idToken } = request.body;
+            if (!idToken) {
+                return response.status(401).json({ message: 'Invalid request' });
+            }
+
+            const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+            const googleResponse = await googleClient.verifyIdToken({
+                idToken: idToken,
+                audience: process.env.GOOGLE_CLIENT_ID
+            });
+
+            const payload = googleResponse.getPayload();
+            const { sub: googleId, name, email } = payload;
+
+            let user = await userDao.findByEmail(email);
+            if (!user) {
+                user = await userDao.create({
+                    name: name,
+                    email: email,
+                    googleId: googleId
+                });
+            }
+
+            const token = jwt.sign({
+                name: user.name,
+                email: user.email,
+                googleId: user.googleId,
+                id: user._id
+            }, process.env.JWT_SECRET,
+                { expiresIn: '1h' }
+            );
+
+            response.cookie('jwtToken', token, {
+                httpOnly: true,
+                secure: true,
+                domain: 'localhost',
+                path: '/'
+            });
+            return response.status(200).json({
+                message: 'User authenticated',
+                user: user
+            });
+
+        } catch (error) {
             console.log(error);
             return response.status(500).json({
                 message: 'Internal server error'
