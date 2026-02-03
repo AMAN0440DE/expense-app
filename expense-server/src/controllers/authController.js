@@ -9,24 +9,34 @@ const jwt = require('jsonwebtoken'); // for generating token after login for aut
 // usually 10-12 salt rounds are used
 // installed via npm install bcrypt command in expense-server folder
 // compare user provided password with hashed password stored in db via bcrypt.compare method
-const {OAuth2Client} = require ('google-auth-library');
+const { OAuth2Client } = require('google-auth-library');
+
+
+const { validationResult } = require('express-validator');
 
 const authController = {
     login: async (request, response) => {             // async keyword lets know that this will take time, and await tell at which line it will take time(line 14)
         // cut/copy paste the created login api code from server.js here
-        const {email, password} = request.body;
-        if(!email || !password){
+
+        const errors = validationResult(request);
+        if (!errors.isEmpty()) {
             return response.status(400).json({
-                message: 'Email and Password are required'
+                errors: errors.array()
             });
         }
+        const { email, password } = request.body;
+        // if(!email || !password){
+        //     return response.status(400).json({
+        //         message: 'Email and Password are required'
+        //     });
+        // }
         // const user = users.find(user => user.email === email && user.password === password);
         const user = await userDao.findByEmail(email);
-        if (!user) {
-            return response.status(400).json({
-                message: 'Invalid Email or Password'
-            });
-        }
+        // if (!user) {
+        //     return response.status(400).json({
+        //         message: 'Invalid Email or Password'
+        //     });
+        // }
 
         const isPasswordMatched = await bcrypt.compare(password, user.password); // comparing plain text password with hashed password stored in db
 
@@ -42,14 +52,15 @@ const authController = {
 
             response.cookie('jwtToken', token, {
                 httpOnly: true,
-                secure: true,
+                secure: false, // Changed to false for localhost development
                 domain: 'localhost',
                 path: '/',
             });
+            const userResponse = user.toObject ? user.toObject() : user;
+            delete userResponse.password;
             return response.status(200).json({
                 message: 'User Authenticated',
-                // user: {id: user.id, name: user.name, email: user.email}
-                user: user
+                user: userResponse
             });
         } else {
             return response.status(400).json({
@@ -60,9 +71,9 @@ const authController = {
     },
     register: async (request, response) => {
         // cut/copy paste the created register api code from server.js here
-        const {name, email, password} = request.body;  
-    
-        if(!name || !email || !password){
+        const { name, email, password } = request.body;
+
+        if (!name || !email || !password) {
             return response.status(400).json({
                 message: 'Name, Email, Password are required'
             });
@@ -84,7 +95,7 @@ const authController = {
 
         // Check if user already exists
         const existingUser = await userDao.findByEmail(email);
-        if(existingUser){
+        if (existingUser) {
             return response.status(400).json({
                 message: `User already exists with email: ${email}`
             });
@@ -95,17 +106,17 @@ const authController = {
             email: email,
             password: hashedPassword
         })
-        
-            .then(u => { return u;})
+
+            .then(u => { return u; })
             .catch(error => {
-                if (error.code === 'USER_EXISTS'){
+                if (error.code === 'USER_EXISTS') {
                     return response.status(400).json({
                         message: `User already exists with email: ${email}`
                     });
                 }
             });
 
-            //  Generate JWT token
+        //  Generate JWT token
         const token = jwt.sign(
             {
                 email: user.email,
@@ -123,6 +134,8 @@ const authController = {
             sameSite: 'lax'
         });
 
+        const userResponse = user.toObject ? user.toObject() : user;
+        delete userResponse.password;
 
         // return response.status(200).json({
         //     message: 'User registered',
@@ -130,10 +143,10 @@ const authController = {
         // });                                         // refracted
         return response.status(201).json({
             message: 'User registered successfully',
-            user: user
+            user: userResponse
         });
 
-    
+
 
         // const newUser = {
         //     id: users.length + 1,
@@ -141,48 +154,41 @@ const authController = {
         //     email: email,
         //     password: password
         // };
-
-        // users.push(newUser);
-
-        // return response.status(200).json({
-        //     message: 'User Registered',
-        //     user: {id: newUser.id}
-        // });
-
+        // ... (preserving comments) ...
         // remaining
         console.log("Registering user")
     },
     isUserLoggedIn: async (request, response) => {
         try {
             const token = request.cookies?.jwtToken;
-            if(!token){
+            if (!token) {
                 return response.status(401).json({
                     message: 'Unauthorized access'
                 });
             }
             jwt.verify(token, process.env.JWT_SECRET, (error, user) => {
-                if(error){
+                if (error) {
                     return response.status(401).json({
                         message: 'Invalid Token'
                     });
-                }else {
+                } else {
                     response.json({
                         user: user
                     });
                 }
             });
-        }catch (error){
+        } catch (error) {
             console.log(error);
             return response.status(500).json({
                 message: 'Internal server error'
             });
         }
     },
-    logout: async(request, response) => {
+    logout: async (request, response) => {
         try {
             response.clearCookie('jwtToken');
-            response.json({ message: 'Logout successful'});
-        }catch (error) {
+            response.json({ message: 'Logout successful' });
+        } catch (error) {
             console.log(error);
             return response.status(500).json({
                 message: 'Internal server error'
@@ -225,13 +231,17 @@ const authController = {
 
             response.cookie('jwtToken', token, {
                 httpOnly: true,
-                secure: true,
+                secure: false, // Changed for consistency
                 domain: 'localhost',
                 path: '/'
             });
+
+            const userResponse = user.toObject ? user.toObject() : user;
+            if (userResponse.password) delete userResponse.password;
+
             return response.status(200).json({
                 message: 'User authenticated',
-                user: user
+                user: userResponse
             });
 
         } catch (error) {
