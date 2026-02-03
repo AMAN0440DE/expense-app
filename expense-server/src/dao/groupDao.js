@@ -25,11 +25,14 @@ const groupDao = {
         return await Group.find({ membersEmail: email });
     },
     getGroupByStatus: async (status) => {
+        // take email as input then filter groups by email
+        // check in member'sEmail field
         return await Group.find({ 'paymentStatus.isPaid': status });
     },
 
     getAuditLog: async (groupId) => {
-        return await Group.findById(groupId).select('name adminEmail createdAt membersEmail paymentStatus');
+        const group =  await Group.findById(groupId).select('paymentStatus.date');
+        return group ? group.paymentStatus.date : null;
     }
 
 };
