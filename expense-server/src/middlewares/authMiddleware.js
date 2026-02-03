@@ -1,7 +1,9 @@
+const jwt = require('jsonwebtoken');
+
 const authMiddleware = {
     protect: async (request, response, next) => {
         // can have mutiple middleware
-        // next -> to move to next middleware or next actual request 
+        // next -> to move to next middleware or next actual request
         try {
             const token = request.cookies?.jwtToken;
             if(!token){
