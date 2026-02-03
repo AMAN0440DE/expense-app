@@ -1,18 +1,28 @@
 const groupDao = require('../dao/groupDao');
 
 const groupController = {
+
+    // CREATE GROUP
     create: async (request, response) => {
         try {
-            const user = request.user; // obtained from authMiddleware after token verification
-            const {name, description, adminEmail, membersEmail, thumbnail} = request.body;
+            const user = request.user; // from authMiddleware
+            const { name, description, membersEmail, thumbnail } = request.body;
 
-            let allMembers = [adminEmail];
-            if(membersEmail && Array.isArray(membersEmail)) {
+            if (!name) {
+                return response.status(400).json({ message: 'Group name is required' });
+            }
+
+            let allMembers = [user.email];
+            if (membersEmail && Array.isArray(membersEmail)) {
                 allMembers = [...new Set([...allMembers, ...membersEmail])];
             }
 
             const newGroup = await groupDao.createGroup({
-                name,description, adminEmail, allMembers, thumbnail,
+                name,
+                description,
+                adminEmail: user.email,
+                membersEmail: allMembers,
+                thumbnail,
                 paymentStatus: {
                     amount: 0,
                     currency: 'INR',
@@ -20,16 +30,19 @@ const groupController = {
                     isPaid: false,
                 }
             });
+
             response.status(201).json({
                 message: 'Group created successfully',
                 groupId: newGroup._id
             });
-        }catch (error) {
-            console.log(error);
-            response.status(500).send({ message: 'Internal Server Error' });
+
+        } catch (error) {
+            console.error(error);
+            response.status(500).json({ message: 'Internal Server Error' });
         }
     },
 
+    // UPDATE GROUP
     updateGroup: async (request, response) => {
         try {
             const { groupId } = request.params;
@@ -51,12 +64,14 @@ const groupController = {
                 message: 'Group updated successfully',
                 group: updatedGroup
             });
+
         } catch (error) {
-            console.log(error);
+            console.error(error);
             response.status(500).json({ message: 'Internal Server Error' });
         }
     },
 
+    // ADD MEMBERS
     addMembers: async (request, response) => {
         try {
             const { groupId } = request.params;
@@ -76,12 +91,14 @@ const groupController = {
                 message: 'Members added successfully',
                 group: updatedGroup
             });
+
         } catch (error) {
-            console.log(error);
+            console.error(error);
             response.status(500).json({ message: 'Internal Server Error' });
         }
     },
 
+    // REMOVE MEMBERS
     removeMembers: async (request, response) => {
         try {
             const { groupId } = request.params;
@@ -101,12 +118,14 @@ const groupController = {
                 message: 'Members removed successfully',
                 group: updatedGroup
             });
+
         } catch (error) {
-            console.log(error);
+            console.error(error);
             response.status(500).json({ message: 'Internal Server Error' });
         }
     },
 
+    // GET GROUPS BY USER EMAIL
     getGroupByEmail: async (request, response) => {
         try {
             const { email } = request.params;
@@ -119,37 +138,45 @@ const groupController = {
 
             response.status(200).json({
                 message: 'Groups retrieved successfully',
-                groups: groups
+                groups
             });
+
         } catch (error) {
-            console.log(error);
+            console.error(error);
             response.status(500).json({ message: 'Internal Server Error' });
         }
     },
 
+    // GET GROUPS BY PAYMENT STATUS
     getGroupByStatus: async (request, response) => {
         try {
             const { status } = request.params;
 
-            // Convert status string to boolean
-            const isPaid = status === 'true' || status === '1' || status === 'paid';
+            const isPaid =
+                status === 'true' ||
+                status === '1' ||
+                status === 'paid';
 
             const groups = await groupDao.getGroupByStatus(isPaid);
 
             if (!groups || groups.length === 0) {
-                return response.status(404).json({ message: `No groups found with status: ${status}` });
+                return response.status(404).json({
+                    message: `No groups found with status: ${status}`
+                });
             }
 
             response.status(200).json({
                 message: 'Groups retrieved successfully',
-                groups: groups
+                groups
             });
+
         } catch (error) {
-            console.log(error);
+            console.error(error);
             response.status(500).json({ message: 'Internal Server Error' });
         }
     },
 
+    // GET AUDIT LOG
     getAuditLog: async (request, response) => {
         try {
             const { groupId } = request.params;
@@ -162,10 +189,83 @@ const groupController = {
 
             response.status(200).json({
                 message: 'Audit log retrieved successfully',
-                auditLog: auditLog
+                auditLog
             });
+
         } catch (error) {
-            console.log(error);
+            console.error(error);
+            response.status(500).json({ message: 'Internal Server Error' });
+        }
+    },
+
+    // GET GROUPS BY USER EMAIL (alternative method name for routes)
+    getGroupsByUser: async (request, response) => {
+        try {
+            const user = request.user; // from authMiddleware
+            const groups = await groupDao.getGroupByEmail(user.email);
+
+            if (!groups || groups.length === 0) {
+                return response.status(404).json({ message: 'No groups found for this user' });
+            }
+
+            response.status(200).json({
+                message: 'Groups retrieved successfully',
+                groups
+            });
+
+        } catch (error) {
+            console.error(error);
+            response.status(500).json({ message: 'Internal Server Error' });
+        }
+    },
+
+    // GET GROUPS BY PAYMENT STATUS (alternative method name for routes)
+    getGroupsByPaymentStatus: async (request, response) => {
+        try {
+            const { status } = request.params;
+
+            const isPaid =
+                status === 'true' ||
+                status === '1' ||
+                status === 'paid';
+
+            const groups = await groupDao.getGroupByStatus(isPaid);
+
+            if (!groups || groups.length === 0) {
+                return response.status(404).json({
+                    message: `No groups found with status: ${status}`
+                });
+            }
+
+            response.status(200).json({
+                message: 'Groups retrieved successfully',
+                groups
+            });
+
+        } catch (error) {
+            console.error(error);
+            response.status(500).json({ message: 'Internal Server Error' });
+        }
+    },
+
+    // GET AUDIT LOG (alternative method name for routes)
+    getAudit: async (request, response) => {
+        try {
+            const { groupId } = request.params;
+
+            const auditLog = await groupDao.getAuditLog(groupId);
+
+            if (!auditLog) {
+                return response.status(404).json({ message: 'Group not found' });
+            }
+
+            response.status(200).json({
+                message: 'Audit log retrieved successfully',
+                auditLog
+            });
+
+        } catch (error) {
+            console.error(error);
             response.status(500).json({ message: 'Internal Server Error' });
         }
     }
