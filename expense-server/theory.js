@@ -197,4 +197,13 @@
  *                                                                                                                |<-----------------------------|
  *  
  * 
+ * 
+ * /////////////////////////////////ROLE BASED ACCESS
+ * 
+ * whoever register will be assigned admin role
+ * viewer role
+ * manager role
+ * 
+ * 
+ * 
  */
