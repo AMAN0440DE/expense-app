@@ -127,7 +127,7 @@ try {
             console.log("DEBUG: Response Data:", data);
 
             if (response.ok && data.message === 'Settlement successful') {
-                console.log("✅ TEST PASSED: Settlement recorded.");
+                console.log(" TEST PASSED: Settlement recorded.");
 
                 // Verify Expense Created
                 const expense = await Expense.findOne({
@@ -137,15 +137,15 @@ try {
                     paidByEmail: user.email
                 });
                 if (expense) {
-                    console.log("✅ Expense Verified in DB:", expense._id);
-                    console.log("   Amount:", expense.amount);
-                    console.log("   Splits:", expense.splits);
+                    console.log(" Expense Verified in DB:", expense._id);
+                    console.log(" Amount:", expense.amount);
+                    console.log(" Splits:", expense.splits);
                 } else {
-                    console.error("❌ Expense NOT found in DB!");
+                    console.error(" Expense NOT found in DB!");
                 }
 
             } else {
-                console.error("❌ TEST FAILED: Unexpected response.");
+                console.error("TEST FAILED: Unexpected response.");
             }
 
         } catch (error) {
