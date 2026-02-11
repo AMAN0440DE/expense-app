@@ -32,14 +32,13 @@ const mongoose = require('mongoose');
 
 const authRoutes = require('./src/routes/authRoutes');  // refracted
 const groupRoutes = require('./src/routes/groupRoutes');  // new for Splitt App
+const rbacRoutes = require('./src/routes/rbacRoutes');
+const paymentRoutes = require('./src/routes/paymentRoutes');
+const profileRoutes = require('./src/routes/profileRoutes');
+const expenseRoutes = require('./src/routes/expenseRoutes');
+// ... (existing db connection code) ...
 
-
-// mongoose.connect("mongodb://localhost:27017/expense-app")            // its sensitive and must not put on github untill privete so later use env variable
-// // store in .env and .env must be added in .gitignore file
-
-// we cant use above credentials directly so we use process.env to access environment variables stored the same in .env file and .env is gitignored
-    mongoose.connect(process.env.MONGO_DB_CONNECTION_URL)
-
+mongoose.connect(process.env.MONGO_DB_CONNECTION_URL)
     .then(() => console.log("Connected to MongoDB"))
     .catch((error) => console.error("Error connecting to MongoDB:", error));
 
@@ -50,6 +49,10 @@ const corsOption = {
 
 const app = express();   // object of express
 
+app.get('/health', (req, res) => {
+    res.status(200).send('Server is healthy');
+});
+
 app.use(cors(corsOption));
 
 app.use(express.json());    // middleware to parse json data in request body// middleware function
@@ -58,13 +61,17 @@ app.use(express.json());    // middleware to parse json data in request body// m
 app.use(cookieParser());    // middleware to parse cookies from request
 app.use('/auth', authRoutes);  // refracted
 app.use('/groups', groupRoutes);  // new for Splitt App
+app.use('/users', rbacRoutes);
+app.use('/payments', paymentRoutes);
+app.use('/profile', profileRoutes);
+app.use('/expenses', expenseRoutes);
 
 
 //let users = [];  // to store user data
 
 // app.post('/register', (request, response) => {       // whenever request comes to /register then run this callback function
 //     const {name, email, password} = request.body;  // everything that will be sent to client will be a part of request body
-    
+
 //     if(!name || !email || !password){
 //         return response.status(400).json({
 //             message: 'Name, Email, Password are required'
@@ -79,7 +86,7 @@ app.use('/groups', groupRoutes);  // new for Splitt App
 //             message: 'User already exists with email: $email'
 //         });
 //     }
- 
+
 
 //     const newUser = {
 //         id: users.length + 1,
@@ -132,7 +139,7 @@ app.listen(5001, () => {
 })
 
 // any project beyond 200 lines is not good practice to keep in single file lots of scrolling and diificult to edit the file
-// so way to code structuring -  MVC (very old) 
+// so way to code structuring -  MVC (very old)
 // 1. single responsibility principle - every file should have single responsibility
 // create src folder -> keeps parent directory clean, any source code there should go in src folder
 // create controller folder under src-> to be the entry point in the business logic , responsible for data validation before going further, and calls different layers
@@ -156,15 +163,15 @@ app.listen(5001, () => {
 // install jsonwebtoken package -> npm i jsonwebtoken in expense-server folder
 
 // first it validate that whether the user passed the credentials are valid or not from database
-// 
+//
 
 
 /**
  * Client(Postman)                            Server (Express)                      Database (MongoDB)         JWT
  * |                                            |                                     |
- * --1. Register / Login Request -------------> |-----email(Dao) -------------------->|                                         
+ * --1. Register / Login Request -------------> |-----email(Dao) -------------------->|
  *                                              |--2. User Object --------------------|
- *                                              |----------------- 3. Sign secret data ------------------------->|          
+ *                                              |----------------- 3. Sign secret data ------------------------->|
  *                                              |<------------------Token-------------|--------------------------|
  * <-------- 5. Send Token 1(cookie)----------- |
  * -----------Middleware----------------------->|
@@ -172,21 +179,21 @@ app.listen(5001, () => {
  *                                              |<-----------------------User Data-------------------------------|
  *                                              |
  *                                              | loop group controller
- 
- * 
- * 
- * 
- * 
- * 
- * 
+
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 /**
  * OAuth 2.0 (Autorization AuthZ)
  *    +
  * OIDC (Open ID Connect)(Authentication AuthN)
- * 
- * 
+ *
+ *
  * SSO
  */
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
