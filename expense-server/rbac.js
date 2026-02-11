@@ -14,9 +14,8 @@ const migrateUsers = async () => {
             {
                 $set: {
                     role: 'admin',      // Default to admin for existing users
-                    adminId: null       // Will be set to their own _id by authController on next login if we really wanted to, but let's leave as null or set to themselves to be safe? 
-                    // Actually authController does: user.adminId = user.adminId || user._id; so null is fine for now, or we can copy _id. 
-                    // Let's just set role for now.
+                    adminId: null       // Will be set to their own _id by authController on next login if we really wanted to, but let's leave as null or set to themselves to be safe
+                    
                 }
             }
         );
@@ -26,7 +25,6 @@ const migrateUsers = async () => {
 
         // Also ensure adminId is set for those who don't have it
         // It's harder to do "set adminId to _id" in a simple updateMany without aggregation pipeline or loop.
-        // Let's do a cursor for that.
 
         const usersWithoutAdminId = await User.find({ adminId: { $exists: false } });
         console.log(`Found ${usersWithoutAdminId.length} users without adminId. Updating...`);
